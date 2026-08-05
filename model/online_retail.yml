@@ -1,0 +1,68 @@
+cubes:
+  - name: online_retail
+    sql: >
+      SELECT
+        id,
+        invoice_no,
+        stock_code,
+        description,
+        quantity,
+        invoice_date,
+        unit_price,
+        customer_id,
+        country,
+        (invoice_no LIKE 'C%') AS is_cancelled
+      FROM online_retail_raw
+
+    measures:
+      - name: total_revenue
+        sql: "quantity * unit_price"
+        type: sum
+        filters:
+          - sql: "{CUBE}.is_cancelled = false"
+        description: "Doanh thu, loại trừ hoá đơn huỷ (InvoiceNo bắt đầu bằng 'C')"
+
+      - name: order_count
+        sql: invoice_no
+        type: count_distinct
+        filters:
+          - sql: "{CUBE}.is_cancelled = false"
+        description: "Số hoá đơn hợp lệ"
+
+      - name: cancelled_rate
+        sql: "COUNT(DISTINCT CASE WHEN {CUBE}.is_cancelled THEN {CUBE}.invoice_no END)::float / NULLIF(COUNT(DISTINCT {CUBE}.invoice_no), 0)"
+        type: number
+        description: "Tỷ lệ hoá đơn bị huỷ"
+
+      - name: total_quantity
+        sql: quantity
+        type: sum
+        filters:
+          - sql: "{CUBE}.is_cancelled = false"
+        description: "Tổng số lượng sản phẩm bán ra"
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: invoice_no
+        sql: invoice_no
+        type: string
+
+      - name: description
+        sql: description
+        type: string
+
+      - name: customer_id
+        sql: customer_id
+        type: string
+
+      - name: country
+        sql: country
+        type: string
+
+      - name: invoice_date
+        sql: invoice_date
+        type: time

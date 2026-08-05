@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: demo-postgres
+    environment:
+      POSTGRES_USER: cube
+      POSTGRES_PASSWORD: cubepass
+      POSTGRES_DB: demo_ecommerce
+    ports:
+      - "5434:5432"     # ← đổi chỗ này
+
+  cube:
+    image: cubejs/cube:latest
+    container_name: demo-cube
+    ports:
+      - "4000:4000"
+      - "15432:15432"
+    environment:
+      CUBEJS_DEV_MODE: "true"
+      CUBEJS_DB_TYPE: postgres
+      CUBEJS_DB_HOST: postgres
+      CUBEJS_DB_NAME: demo_ecommerce
+      CUBEJS_DB_USER: cube
+      CUBEJS_DB_PASS: cubepass
+      CUBEJS_API_SECRET: "demo_secret_change_me"
+    volumes:
+      - ./model:/cube/conf/model
+    depends_on:
+      - postgres
